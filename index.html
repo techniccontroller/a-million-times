@@ -3,8 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>A Million Times Clock</title>
+  <title>A Million Times Clock – Digital Wall Clock Art</title>
+
+  <meta name="description" content="A Million Times is a digital clock artwork inspired by the Humans since 1982 installation. Fullscreen clock display with themes and smooth transitions.">
+  <link rel="canonical" href="https://www.a-million-times.com/">
+
+  <meta name="robots" content="index,follow,max-image-preview:large">
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="A Million Times Clock – Digital Wall Clock Art">
+  <meta property="og:description" content="Fullscreen digital clock artwork with themes and smooth transitions.">
+  <meta property="og:url" content="https://www.a-million-times.com/">
+  <meta property="og:image" content="https://www.a-million-times.com/og-image.jpg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="A Million Times Clock – Digital Wall Clock Art">
+  <meta name="twitter:description" content="Fullscreen digital clock artwork with themes and smooth transitions.">
+  <meta name="twitter:image" content="https://www.a-million-times.com/og-image.jpg">
+
+  <link rel="preload" as="image" href="pexels-lamiko-3616764.jpg">
+
   <style>
     html, body {
       margin: 0;
@@ -169,11 +188,57 @@
     .slider-container input {
       flex-grow: 1;
     }
+
+    #content {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 60px;           /* above footer */
+      width: min(900px, 92vw);
+      padding: 12px 16px;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      backdrop-filter: blur(6px);
+    }
+
+    /* Visually hidden but still readable by screen readers + indexable */
+    .visually-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      clip-path: inset(50%) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    #content h1 { margin: 0 0 6px; font-size: 20px; }
+    #content h2 { margin: 12px 0 6px; font-size: 16px; }
+    #content p, #content li { margin: 0 0 6px; font-size: 14px; color: #222; }
   </style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "A Million Times Clock",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Web",
+    "url": "https://www.a-million-times.com/",
+    "description": "A fullscreen digital clock artwork with themes and smooth transitions.",
+    "image": "https://www.a-million-times.com/og-image.jpg"
+  }
+  </script>
 </head>
 <body>
   <div id="clock-container">
-    <canvas id="c"></canvas>
+    <canvas id="c" aria-label="Animated clock display showing the current time"></canvas>
+    <noscript>
+      <p>This clock requires JavaScript to display the time.</p>
+    </noscript>
   </div>
   <div class="controls">
     <button id="fullscreen-btn" title="Toggle Fullscreen">
@@ -183,6 +248,21 @@
       <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
     </button>
   </div>
+
+  <main id="content" class="visually-hidden">
+    <h1>A Million Times Clock</h1>
+    <p>
+      A fullscreen digital clock artwork inspired by kinetic clock installations.
+      Choose themes, adjust transitions, and display the time beautifully on any screen.
+    </p>
+
+    <h2>Features</h2>
+    <ul>
+      <li>Responsive grid of mini-clocks forming the current time</li>
+      <li>Theme selector (light, dark, navy, forest, gold)</li>
+      <li>Smooth transitions and fullscreen mode</li>
+    </ul>
+  </main>
 
   <div class="footer">
     <a href="https://techniccontroller.com" target="_blank" rel="noopener">
