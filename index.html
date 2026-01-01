@@ -17,7 +17,6 @@
       width: 100vw;
       height: 100vh;
     }
-    /* Optional: subtle hint */
     .hint {
       position: fixed;
       left: 12px;
@@ -42,12 +41,23 @@
 
   const backColor   = { r: 255, g: 255, b: 255, a: 1.0 };
   const handColor   = { r:   0, g:   0, b:   0, a: 1.0 };
-  const shadowColor = { r: 200, g: 200, b: 200, a: 0.61 }; // ~155/255
+  const shadowColor = { r: 200, g: 200, b: 200, a: 0.61 }; // used for clock face rim
 
-  const TransitionSeconds = 5.0;
+  const TransitionSeconds = 2.0;
+
+  // FPS cap
+  const MAX_FPS = 20;
+  const FRAME_INTERVAL = 1 / MAX_FPS;
+  let lastRenderSec = 0;
+
+  // Hand shadow (blurred, offset down-right)
+  // Values are in CSS px; we scale by DPR at draw-time.
+  const HAND_SHADOW_OFFSET = 4;
+  const HAND_SHADOW_BLUR   = 8;
+  const HAND_SHADOW_ALPHA  = 0.30;
 
   // Pattern cadence (will be mutated by patterns like your C#)
-  let PatternPeriodSeconds = 5.0;
+  let PatternPeriodSeconds = TransitionSeconds;
   const totalPattern = 8;
   let patternIndex = 3;
 
@@ -68,7 +78,6 @@
 
   function shortestDeltaDeg(fromDeg, toDeg) {
     let d = normalizeDeg(toDeg) - normalizeDeg(fromDeg);
-    // wrap into [-180, 180)
     d = (d + 540) % 360 - 180;
     return d;
   }
@@ -104,7 +113,6 @@
     { a: 225, b: 225 },
   ];
 
-  // 3x6 digit patterns (indices into clockStates)
   const numberPatterns = [
     [[5,6,8],[2,7,2],[2,2,2],[2,2,2],[2,0,2],[1,6,3]],  // 0
     [[12,5,8],[12,2,2],[12,2,2],[12,2,2],[12,2,2],[12,1,3]], // 1
@@ -149,7 +157,6 @@
           } else if (localCol < 6) {
             pattern[idx] = getClockStateForNumber(hUnits, localRow, localCol - 3);
           } else if (localCol < 8) {
-            // colon
             if (localCol === 6) {
               if (localRow === 1 || localRow === 3) pattern[idx] = clockStates[5];
               else if (localRow === 2 || localRow === 4) pattern[idx] = clockStates[1];
@@ -165,7 +172,7 @@
             pattern[idx] = getClockStateForNumber(mUnits, localRow, localCol - 11);
           }
         } else {
-          pattern[idx] = clockStates[12]; // background "idle"
+          pattern[idx] = clockStates[12];
         }
       }
     }
@@ -260,7 +267,6 @@
     let a = normalizeDeg(tangentDeg - spread);
     let b = normalizeDeg(tangentDeg + spread);
 
-    // quantize not used in your ApplyPattern; keep optional
     if (quantize) {
       const step = 15;
       a = normalizeDeg(Math.round(a / step) * step);
@@ -297,6 +303,21 @@
   }
 
   function getPatternVector(row, col, rows, cols, cxRatio = 0.5, cyRatio = 0.5) {
+    const cx = (cols - 1) * cxRatio;
+    const cy = (rows - 1) * cyRatio;
+
+    const dx = col - cx;
+    const dy = row - cy;
+
+    let radialDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+    radialDeg = normalizeDeg(radialDeg + 90);
+
+    const a = normalizeDeg(radialDeg);
+    const b = normalizeDeg(radialDeg + 180);
+    return [a, b];
+  }
+
+  function getPatternVectorTangent(row, col, rows, cols, cxRatio = 0.5, cyRatio = 0.5) {
     const cx = (cols - 1) * cxRatio;
     const cy = (rows - 1) * cyRatio;
 
@@ -352,14 +373,12 @@
       const fy = (y + 0.5) / rows;
 
       const X = lerp(this.cfg.XMin, this.cfg.XMax, fx);
-      const Y = lerp(this.cfg.YMax, this.cfg.YMin, fy); // invert y
+      const Y = lerp(this.cfg.YMax, this.cfg.YMin, fy);
 
       return { x: X, y: Y };
     }
 
     degreesFromVectorUp0CW(vx, vy) {
-      // screen coords (y down). 0=up, CW positive:
-      // angle = atan2(x, -y)
       let r = Math.atan2(vx, -vy);
       let deg = r * 180 / Math.PI;
       deg %= 360;
@@ -383,7 +402,6 @@
         dfy = inst.v;
       }
 
-      // field (y up) -> screen (y down)
       const dsx = dfx;
       const dsy = -dfy;
 
@@ -405,27 +423,30 @@
         let aDeg = 0, bDeg = 90;
 
         if (pIndex === 0) {
-          [aDeg, bDeg] = getPatternAngles(row, col, Rows, Cols, false);
-          // keep PatternPeriodSeconds as is (like your code)
-        }
-        else if (pIndex === 1) {
-          [aDeg, bDeg] = getPatternAnglesCircleOpen(row, col, Rows, Cols);
-          PatternPeriodSeconds = TransitionSeconds;
-        }
-        else if (pIndex === 2) {
-          [aDeg, bDeg] = getPatternAnglesCircleOpen(row, col, Rows, Cols, 0.5, 0.5, 100);
-          PatternPeriodSeconds = TransitionSeconds;
-        }
-        else if (pIndex === 3) {
+          //[aDeg, bDeg] = getPatternAngles(row, col, Rows, Cols, false);
           [aDeg, bDeg] = getPatternVector(row, col, Rows, Cols);
           PatternPeriodSeconds = TransitionSeconds;
         }
+        else if (pIndex === 1) {
+          [aDeg, bDeg] = getPatternAnglesCircleOpen(row, col, Rows, Cols, 0.5, 0.5, 0);
+          PatternPeriodSeconds = TransitionSeconds;
+        }
+        else if (pIndex === 2) {
+          [aDeg, bDeg] = getPatternAnglesCircleOpen(row, col, Rows, Cols);
+          
+          PatternPeriodSeconds = TransitionSeconds;
+        }
+        else if (pIndex === 3) {
+          [aDeg, bDeg] = getPatternAnglesCircleOpen(row, col, Rows, Cols, 0.5, 0.5, 110);
+          //[aDeg, bDeg] = getPatternVector(row, col, Rows, Cols);
+          PatternPeriodSeconds = TransitionSeconds;
+        }
         else if (pIndex === 4) {
-          currentTimePattern = createTimePattern(new Date()); // uses UTC getters inside
+          currentTimePattern = createTimePattern(new Date());
           const st = currentTimePattern[idx];
           aDeg = st.a;
           bDeg = st.b;
-          PatternPeriodSeconds = 10.0;
+          PatternPeriodSeconds = TransitionSeconds + 5;
         }
         else if (pIndex === 5) {
           const cfg = {
@@ -467,12 +488,12 @@
           const angle = field.getAngleDegrees(col, row, Cols, Rows);
           aDeg = angle;
           bDeg = normalizeDeg(angle + 180);
-          // your C# doesn't set PatternPeriodSeconds here, leaving prior value;
-          // we keep it as-is.
+          PatternPeriodSeconds = TransitionSeconds;
         }
         else if (pIndex === 7) {
           aDeg = col * 10;
           bDeg = normalizeDeg(aDeg + 180);
+          PatternPeriodSeconds = TransitionSeconds;
         }
 
         clocks[idx].setTargets(aDeg, bDeg, TransitionSeconds, nowSec);
@@ -487,13 +508,12 @@
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
 
-  // --- Optimization: Cached values and offscreen canvas ---
+  // Cached layout + prerendered clock face
   let cellSize = 50;
   let radius, lenA, lenB, thickA, thickB, hubR, pad;
   const clockFaceCanvas = document.createElement('canvas');
   const clockFaceCtx = clockFaceCanvas.getContext('2d');
   let isAnimating = true;
-  // --- End Optimization ---
 
   function rgba(c) {
     return `rgba(${c.r},${c.g},${c.b},${c.a})`;
@@ -503,14 +523,11 @@
     const dpr = Math.max(1, window.devicePixelRatio || 1);
     const w = Math.floor(window.innerWidth * dpr);
     const h = Math.floor(window.innerHeight * dpr);
-    if (canvas.width === w && canvas.height === h) return; // Avoid resize if not needed
+    if (canvas.width === w && canvas.height === h) return;
 
     canvas.width = w;
     canvas.height = h;
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.scale(1,1);
 
-    // --- Optimization: Calculate and cache dimensions ---
     pad = Math.min(w, h) * 0.03;
     const cellW = (w - 2 * pad) / Cols;
     const cellH = (h - 2 * pad) / Rows;
@@ -522,27 +539,28 @@
     lenA = radius * 0.95;
     lenB = radius * 0.85;
     thickA = Math.max(2 * dpr, radius * 0.1);
-    thickB = Math.max(2 * dpr, radius * 0.1);
-    hubR = Math.max(2 * dpr, radius * 0.05);
+    thickB = thickA;
+    hubR = thickA/2;
 
-    // --- Optimization: Pre-render the clock face ---
-    clockFaceCanvas.width = clockFaceCanvas.height = diameter;
-    clockFaceCtx.clearRect(0, 0, diameter, diameter);
+    // Pre-render clock face at device-pixel resolution
+    clockFaceCanvas.width = Math.ceil(diameter);
+    clockFaceCanvas.height = Math.ceil(diameter);
+    clockFaceCtx.clearRect(0, 0, clockFaceCanvas.width, clockFaceCanvas.height);
     drawClockFace(radius, radius, radius, clockFaceCtx);
-    isAnimating = true; // Force redraw after resize
+
+    isAnimating = true;
   }
 
-  function drawClockFace(cx, cy, radius, targetCtx = ctx) {
-    // radial-ish gradient, with slight offset highlight
-    const gx = cx + radius * 0.25;
-    const gy = cy + radius * 0.25;
-    const grad = targetCtx.createRadialGradient(gx, gy, radius * 0.6, cx, cy, radius);
+  function drawClockFace(cx, cy, r, targetCtx = ctx) {
+    const gx = cx + r * 0.25;
+    const gy = cy + r * 0.25;
+    const grad = targetCtx.createRadialGradient(gx, gy, r * 0.6, cx, cy, r);
     grad.addColorStop(0, rgba(backColor));
     grad.addColorStop(0.7, rgba(backColor));
     grad.addColorStop(1, rgba(shadowColor));
 
     targetCtx.beginPath();
-    targetCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+    targetCtx.arc(cx, cy, r, 0, Math.PI * 2);
     targetCtx.closePath();
     targetCtx.fillStyle = grad;
     targetCtx.fill();
@@ -559,7 +577,8 @@
     ctx.closePath();
   }
 
-  function drawHand(cx, cy, angleDeg, length, thickness) {
+  // UPDATED: blurred shadow via canvas shadow* (fastest per-hand way)
+  function drawHand(cx, cy, angleDeg, length, thickness, shadowOffsetPx, shadowBlurPx) {
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(angleDeg * Math.PI / 180);
@@ -570,19 +589,20 @@
     const h = length;
     const corner = Math.min(thickness * 0.3, length * 0.1);
 
-    // shadow (very subtle; C# had it mostly disabled)
-    // If you want stronger shadow, uncomment:
-    // ctx.save();
-    // ctx.translate(6, 6);
-    // ctx.fillStyle = rgba(shadowColor);
-    // roundedRectPath(x, y, w, h, corner);
-    // ctx.fill();
-    // ctx.restore();
+    ctx.shadowColor = `rgba(0,0,0,${HAND_SHADOW_ALPHA})`;
+    ctx.shadowBlur = shadowBlurPx;
+    ctx.shadowOffsetX = shadowOffsetPx;
+    ctx.shadowOffsetY = shadowOffsetPx;
 
-    // hand
     ctx.fillStyle = rgba(handColor);
     roundedRectPath(x, y, w, h, corner);
     ctx.fill();
+
+    // prevent shadow leaking to subsequent drawing ops
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
 
     ctx.restore();
   }
@@ -593,12 +613,14 @@
     const h = canvas.height;
 
     ctx.clearRect(0, 0, w, h);
-
     ctx.imageSmoothingEnabled = true;
 
-    // --- Optimization: Use cached values ---
     const diameter = radius * 2;
     const offset = (cellSize - diameter) / 2;
+
+    // DPR-correct shadow sizing
+    const shadowOffsetPx = HAND_SHADOW_OFFSET * dpr;
+    const shadowBlurPx   = HAND_SHADOW_BLUR * dpr;
 
     let idx = 0;
     for (let row = 0; row < Rows; row++) {
@@ -606,14 +628,13 @@
         const cx = pad + col * cellSize + cellSize / 2;
         const cy = pad + row * cellSize + cellSize / 2;
 
-        // --- Optimization: Use pre-rendered clock face ---
         ctx.drawImage(clockFaceCanvas, pad + col * cellSize + offset, pad + row * cellSize + offset);
 
         const c = clocks[idx];
 
         // B behind, then A
-        drawHand(cx, cy, c.angleB, lenB, thickB);
-        drawHand(cx, cy, c.angleA, lenA, thickA);
+        drawHand(cx, cy, c.angleB, lenB, thickB, shadowOffsetPx*0.8, shadowBlurPx);
+        drawHand(cx, cy, c.angleA, lenA, thickA, shadowOffsetPx, shadowBlurPx);
 
         // hub
         ctx.beginPath();
@@ -634,42 +655,46 @@
   }
 
   // --------------------------
-  // Main loop
+  // Main loop (UPDATED: FPS cap)
   // --------------------------
-  let lastSec = 0;
-
   function tick(tsMs) {
-    requestAnimationFrame(tick); // Request next frame immediately
+    requestAnimationFrame(tick);
     const nowSec = tsMs / 1000;
+
+    // FPS cap: if nothing forces a redraw, skip work
+    if (nowSec - lastRenderSec < FRAME_INTERVAL && !isAnimating) {
+      return;
+    }
 
     // switch patterns on cadence
     if (nowSec >= nextPatternSwitchSec) {
       patternIndex = (patternIndex + 1) % totalPattern;
       applyPattern(patternIndex, nowSec);
-      isAnimating = true; // Start animating
+      isAnimating = true;
 
-      // keep stable cadence
       do {
         nextPatternSwitchSec += PatternPeriodSeconds;
       } while (nowSec >= nextPatternSwitchSec);
     }
 
-    // --- Optimization: Only update and draw if animating ---
-    if (!isAnimating) {
+    // If we're not animating, still allow occasional redraw (debug toggles etc.)
+    // But we keep it capped by FRAME_INTERVAL via lastRenderSec.
+    let anyMoving = false;
+    if (isAnimating) {
+      for (const c of clocks) {
+        c.update(nowSec);
+        if (c.animA || c.animB) anyMoving = true;
+      }
+      isAnimating = anyMoving;
+    }
+
+    // Enforce FPS cap for drawing (also caps while animating)
+    if (nowSec - lastRenderSec < FRAME_INTERVAL) {
       return;
     }
-
-    isAnimating = false;
-    // update anim
-    for (const c of clocks) {
-      c.update(nowSec);
-      if (c.animA || c.animB) {
-        isAnimating = true; // Continue animating if any clock is still moving
-      }
-    }
+    lastRenderSec = nowSec;
 
     draw(nowSec);
-    lastSec = nowSec;
   }
 
   // --------------------------
@@ -677,18 +702,16 @@
   // --------------------------
   window.addEventListener('keydown', e => {
     if (e.code === 'Space') {
-      // manual pattern step
       const nowSec = performance.now() / 1000;
       patternIndex = (patternIndex + 1) % totalPattern;
       applyPattern(patternIndex, nowSec);
       nextPatternSwitchSec = nowSec + PatternPeriodSeconds;
-      isAnimating = true; // Force animation
+      isAnimating = true;
       e.preventDefault();
     } else if (e.code === 'KeyD') {
       debug = !debug;
-      isAnimating = true; // Force redraw to show/hide debug text
+      isAnimating = true;
     } else if (e.code === 'KeyF') {
-      // fullscreen (best effort)
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen?.();
       } else {
@@ -697,20 +720,20 @@
     }
   });
 
-  window.addEventListener('resize', () => {
-    resize();
-  });
+  window.addEventListener('resize', resize);
 
   // --------------------------
   // Init
   // --------------------------
   createClocks();
   resize();
+
   const nowSec = performance.now() / 1000;
-  patternIndex = 3;
+  patternIndex = 4;
   applyPattern(patternIndex, nowSec);
   nextPatternSwitchSec = nowSec + PatternPeriodSeconds;
   isAnimating = true;
+  lastRenderSec = 0;
 
   requestAnimationFrame(tick);
 })();
