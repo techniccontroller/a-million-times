@@ -692,23 +692,33 @@
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
-    const aspect = Cols / Rows;
-    let maxW = Math.floor(window.innerWidth * dpr) * 0.92;
-    let maxH = Math.floor(window.innerHeight * dpr) * 0.92;
 
-    // Calculate the maximum cell size that fits
-    let cellSizeFromWidth = maxW / Cols;
-    let cellSizeFromHeight = maxH / Rows;
-    cellSize = Math.floor(Math.min(cellSizeFromWidth, cellSizeFromHeight));
+    // Work in CSS pixels first
+    const maxW = window.innerWidth * 0.92;
+    const maxH = window.innerHeight * 0.92;
 
-    // Calculate exact canvas size to fit the grid perfectly
-    const w = cellSize * Cols * 1.03;
-    const h = cellSize * Rows * 1.03;
+    cellSize = Math.floor(Math.min(maxW / Cols, maxH / Rows));
 
-    if (canvas.width === w && canvas.height === h) return;
+    // CSS size (what the user sees)
+    pad = cellSize * 0.03;
+    const cssW = Math.floor(cellSize * Cols + pad);
+    const cssH = Math.floor(cellSize * Rows + pad);
 
-    canvas.width = w;
-    canvas.height = h;
+    // Set displayed size
+    canvas.style.width = cssW + "px";
+    canvas.style.height = cssH + "px";
+
+    // Set internal buffer size (hi-res)
+    const bufW = Math.floor(cssW * dpr);
+    const bufH = Math.floor(cssH * dpr);
+
+    if (canvas.width === bufW && canvas.height === bufH) return;
+
+    canvas.width = bufW;
+    canvas.height = bufH;
+
+    // Draw using CSS pixel coordinates
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     pad = cellSize * 0.03;
 
@@ -717,14 +727,15 @@
 
     lenA = radius * 0.95;
     lenB = radius * 0.85;
-    thickA = Math.max(2 * dpr, radius * 0.1);
+    thickA = Math.max(2, radius * 0.1);
     thickB = thickA;
-    hubR = thickA/2;
+    hubR = thickA / 2;
 
-    // Pre-render clock face at device-pixel resolution
-    clockFaceCanvas.width = Math.ceil(diameter);
-    clockFaceCanvas.height = Math.ceil(diameter);
-    clockFaceCtx.clearRect(0, 0, clockFaceCanvas.width, clockFaceCanvas.height);
+    // Pre-render clock face at DPR resolution (crisp)
+    clockFaceCanvas.width = Math.ceil(diameter * dpr);
+    clockFaceCanvas.height = Math.ceil(diameter * dpr);
+    clockFaceCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    clockFaceCtx.clearRect(0, 0, diameter, diameter);
     drawClockFace(radius, radius, radius, clockFaceCtx);
 
     isAnimating = true;
@@ -804,8 +815,8 @@
     const offset = (cellSize - diameter) / 2;
 
     // DPR-correct shadow sizing
-    const shadowOffsetPx = HAND_SHADOW_OFFSET * dpr;
-    const shadowBlurPx   = HAND_SHADOW_BLUR * dpr;
+    const shadowOffsetPx = HAND_SHADOW_OFFSET;
+    const shadowBlurPx   = HAND_SHADOW_BLUR;
 
     let idx = 0;
     for (let row = 0; row < Rows; row++) {
@@ -813,7 +824,7 @@
         const cx = pad + col * cellSize + cellSize / 2;
         const cy = pad + row * cellSize + cellSize / 2;
 
-        ctx.drawImage(clockFaceCanvas, pad + col * cellSize + offset, pad + row * cellSize + offset);
+        ctx.drawImage(clockFaceCanvas, pad + col * cellSize + offset, pad + row * cellSize + offset, radius * 2, radius * 2);
 
         const c = clocks[idx];
 
