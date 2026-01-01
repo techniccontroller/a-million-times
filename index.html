@@ -9,13 +9,51 @@
       margin: 0;
       height: 100%;
       overflow: hidden;
-      background: #ffffff;
+      background: #e0e0e0;
       user-select: none;
+    }
+    #clock-container {
+      position: absolute;
+      top: calc(50% - 20px);
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #ffffff;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      padding: 2vmin;
     }
     canvas {
       display: block;
-      width: 100vw;
-      height: 100vh;
+    }
+    .footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px;
+      text-align: center;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      font-size: 12px;
+      color: #666;
+      background: transparent;
+      z-index: 998;
+    }
+    .footer a {
+      color: #666;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .footer a:hover {
+      color: #333;
+    }
+    .footer svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
     }
     .controls {
       position: fixed;
@@ -131,7 +169,9 @@
   </style>
 </head>
 <body>
-  <canvas id="c"></canvas>
+  <div id="clock-container">
+    <canvas id="c"></canvas>
+  </div>
   <div class="controls">
     <button id="fullscreen-btn" title="Toggle Fullscreen">
       <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
@@ -139,6 +179,13 @@
     <button id="settings-btn" title="Settings">
       <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
     </button>
+  </div>
+
+  <div class="footer">
+    <a href="https://techniccontroller.com" target="_blank" rel="noopener">
+      <b>www.a-million-times.com</b> - Powered by techniccontroller.com
+      <svg viewBox="0 0 24 24"><path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/></svg>
+    </a>
   </div>
 
   <!-- --- Settings Modal --- -->
@@ -186,9 +233,6 @@
   let PatternPeriodSeconds = TransitionSeconds;
   const totalPattern = 8;
   let patternIndex = 3;
-
-  // Debug label toggle
-  let debug = true;
 
   // --------------------------
   // Helpers
@@ -647,17 +691,25 @@
 
   function resize() {
     const dpr = Math.max(1, window.devicePixelRatio || 1);
-    const w = Math.floor(window.innerWidth * dpr);
-    const h = Math.floor(window.innerHeight * dpr);
+    const aspect = Cols / Rows;
+    let maxW = Math.floor(window.innerWidth * dpr) * 0.92;
+    let maxH = Math.floor(window.innerHeight * dpr) * 0.92;
+
+    // Calculate the maximum cell size that fits
+    let cellSizeFromWidth = maxW / Cols;
+    let cellSizeFromHeight = maxH / Rows;
+    cellSize = Math.floor(Math.min(cellSizeFromWidth, cellSizeFromHeight));
+
+    // Calculate exact canvas size to fit the grid perfectly
+    const w = cellSize * Cols;
+    const h = cellSize * Rows;
+
     if (canvas.width === w && canvas.height === h) return;
 
     canvas.width = w;
     canvas.height = h;
 
-    pad = Math.min(w, h) * 0.03;
-    const cellW = (w - 2 * pad) / Cols;
-    const cellH = (h - 2 * pad) / Rows;
-    cellSize = Math.min(cellW, cellH);
+    pad = cellSize * 0.03;
 
     const diameter = cellSize * 0.98;
     radius = diameter / 2;
@@ -778,12 +830,6 @@
         idx++;
       }
     }
-
-    if (debug) {
-      ctx.fillStyle = rgba(handColor);
-      ctx.font = `${16 * dpr}px Arial`;
-      ctx.fillText(`Pattern: ${patternIndex}`, 10 * dpr, (h - 12 * dpr));
-    }
   }
 
   // --------------------------
@@ -809,7 +855,7 @@
       } while (nowSec >= nextPatternSwitchSec);
     }
 
-    // If we're not animating, still allow occasional redraw (debug toggles etc.)
+    // If we're not animating, still allow occasional redraw
     // But we keep it capped by FRAME_INTERVAL via lastRenderSec.
     let anyMoving = false;
     if (isAnimating) {
@@ -875,8 +921,8 @@
         console.log(`Back Color: rgb(${backColor.r}, ${backColor.g}, ${backColor.b})`);
         console.log(`Shadow Color: rgb(${shadowColor.r}, ${shadowColor.g}, ${shadowColor.b})`);
 
-        // Update page background color
-        document.body.style.backgroundColor = `rgb(${backColor.r}, ${backColor.g}, ${backColor.b})`;
+        // Update container background color
+        document.getElementById('clock-container').style.backgroundColor = `rgb(${backColor.r}, ${backColor.g}, ${backColor.b})`;
 
         // Force re-render of clock faces and canvas
         rerenderClockFace();
@@ -891,6 +937,20 @@
         document.documentElement.requestFullscreen?.();
       } else {
         document.exitFullscreen?.();
+      }
+    });
+
+    // Hide controls in fullscreen mode
+    document.addEventListener('fullscreenchange', () => {
+      const controls = document.querySelector('.controls');
+      const footer = document.querySelector('.footer');
+      if (document.fullscreenElement) {
+        controls.style.display = 'none';
+        footer.style.display = 'none';
+        settingsModal.style.display = 'none';
+      } else {
+        controls.style.display = 'flex';
+        footer.style.display = 'block';
       }
     });
 
@@ -924,9 +984,6 @@
       nextPatternSwitchSec = nowSec + PatternPeriodSeconds;
       isAnimating = true;
       e.preventDefault();
-    } else if (e.code === 'KeyD') {
-      debug = !debug;
-      isAnimating = true;
     } else if (e.code === 'KeyF') {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen?.();
@@ -944,8 +1001,8 @@
   createClocks();
   resize();
   
-  // Set initial page background
-  document.body.style.backgroundColor = `rgb(${backColor.r}, ${backColor.g}, ${backColor.b})`;
+  // Set initial container background
+  document.getElementById('clock-container').style.backgroundColor = `rgb(${backColor.r}, ${backColor.g}, ${backColor.b})`;
 
   const nowSec = performance.now() / 1000;
   patternIndex = 4;
