@@ -891,9 +891,9 @@
     const themes = [
       { name: 'Black on White', hand: { r: 0, g: 0, b: 0, a: 1.0 }, back: { r: 255, g: 255, b: 255, a: 1.0 }, shadow: { r: 200, g: 200, b: 200, a: 0.61 } },
       { name: 'White on Black', hand: { r: 255, g: 255, b: 255, a: 1.0 }, back: { r: 0, g: 0, b: 0, a: 1.0 }, shadow: { r: 50, g: 50, b: 50, a: 0.61 } },
-      { name: 'Navy', hand: { r: 255, g: 255, b: 255, a: 1.0 }, back: { r: 24, g: 34, b: 45, a: 1.0 }, shadow: { r: 10, g: 15, b: 20, a: 0.61 } },
-      { name: 'Forest', hand: { r: 230, g: 230, b: 230, a: 1.0 }, back: { r: 40, g: 51, b: 44, a: 1.0 }, shadow: { r: 20, g: 25, b: 22, a: 0.61 } },
-      { name: 'Crimson', hand: { r: 255, g: 240, b: 240, a: 1.0 }, back: { r: 70, g: 12, b: 12, a: 1.0 }, shadow: { r: 40, g: 5, b: 5, a: 0.61 } },
+      { name: 'Navy', hand: { r: 255, g: 255, b: 255, a: 1.0 }, back: { r: 24, g: 34, b: 65, a: 1.0 }, shadow: { r: 10, g: 15, b: 20, a: 0.61 } },
+      { name: 'Forest', hand: { r: 230, g: 230, b: 230, a: 1.0 }, back: { r: 50, g: 61, b: 54, a: 1.0 }, shadow: { r: 20, g: 25, b: 22, a: 0.61 } },
+      { name: 'Navy on White', hand: { r: 24, g: 34, b: 65, a: 1.0 }, back: { r: 255, g: 255, b: 255, a: 1.0 }, shadow: { r: 200, g: 200, b: 200, a: 0.61 } },
       { name: 'Gold', hand: { r: 50, g: 40, b: 0, a: 1.0 }, back: { r: 255, g: 215, b: 0, a: 1.0 }, shadow: { r: 200, g: 160, b: 0, a: 0.61 } },
     ];
     let activeThemeIndex = 0;
@@ -947,11 +947,11 @@
       const footer = document.querySelector('.footer');
       if (document.fullscreenElement) {
         controls.style.display = 'none';
-        footer.style.display = 'none';
+        //footer.style.display = 'none';
         settingsModal.style.display = 'none';
       } else {
         controls.style.display = 'flex';
-        footer.style.display = 'block';
+        //footer.style.display = 'block';
       }
     });
 
