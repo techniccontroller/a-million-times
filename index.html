@@ -120,7 +120,21 @@
       width: 220px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     }
-    #settings-modal h3 {
+    #info-modal {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      width: 280px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    }
+    #settings-modal h3, #info-modal h3 {
       margin-top: 0;
       margin-bottom: 15px;
       font-size: 16px;
@@ -247,6 +261,9 @@
     <button id="settings-btn" title="Settings">
       <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/></svg>
     </button>
+    <button id="info-btn" title="Info">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+    </button>
   </div>
 
   <main id="content" class="visually-hidden">
@@ -284,6 +301,27 @@
         <input type="range" id="transition-slider" min="0.5" max="20" step="0.5">
         <span id="transition-value">15.0s</span>
       </div>
+    </div>
+  </div>
+
+  <!-- --- Info Modal --- -->
+  <div id="info-modal">
+    <h3>About</h3>
+    <p style="font-size: 14px; color: #333; line-height: 1.5; margin-bottom: 12px;">
+      A Million Times is a digital clock artwork inspired by the 
+      <a href="https://www.humanssince1982.com/" target="_blank" rel="noopener" style="color: #007bff; text-decoration: none;">Humans since 1982</a> installation.
+    </p>
+    <p style="font-size: 14px; color: #333; line-height: 1.5; margin-bottom: 12px;">
+      This project features animated clock patterns with smooth transitions and multiple themes.
+    </p>
+    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1);">
+      <a href="https://github.com/techniccontroller/a-million-times" target="_blank" rel="noopener" 
+         style="display: inline-flex; align-items: center; gap: 6px; color: #333; text-decoration: none; font-size: 14px; font-weight: 500;">
+        <svg style="width: 20px; height: 20px; fill: currentColor;" viewBox="0 0 24 24">
+          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+        </svg>
+        View on GitHub
+      </a>
     </div>
   </div>
 
@@ -384,14 +422,14 @@
     return clockStates[idx];
   }
 
-  function createTimePattern(dateUtc) {
+  function createTimePattern(date) {
     const timePosX = 1;
     const timePosY = 1;
     const pattern = new Array(Cols * Rows);
 
     // match your C# behavior
-    const hours = dateUtc.getUTCHours() + 1;
-    const minutes = dateUtc.getUTCMinutes();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
 
     const hTens = Math.floor(hours / 10);
     const hUnits = hours % 10;
@@ -976,6 +1014,8 @@
     const fullscreenBtn = document.getElementById('fullscreen-btn');
     const settingsBtn = document.getElementById('settings-btn');
     const settingsModal = document.getElementById('settings-modal');
+    const infoBtn = document.getElementById('info-btn');
+    const infoModal = document.getElementById('info-modal');
     const transitionSlider = document.getElementById('transition-slider');
     const transitionValue = document.getElementById('transition-value');
     const colorSwatchesContainer = document.getElementById('color-swatches');
@@ -1042,6 +1082,7 @@
         controls.style.display = 'none';
         //footer.style.display = 'none';
         settingsModal.style.display = 'none';
+        infoModal.style.display = 'none';
       } else {
         controls.style.display = 'flex';
         //footer.style.display = 'block';
@@ -1053,11 +1094,23 @@
       e.stopPropagation();
       const isHidden = settingsModal.style.display === 'none' || !settingsModal.style.display;
       settingsModal.style.display = isHidden ? 'block' : 'none';
+      infoModal.style.display = 'none';
+    });
+
+    // --- Info Modal ---
+    infoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = infoModal.style.display === 'none' || !infoModal.style.display;
+      infoModal.style.display = isHidden ? 'block' : 'none';
+      settingsModal.style.display = 'none';
     });
 
     document.addEventListener('click', (e) => {
         if (!settingsModal.contains(e.target) && e.target !== settingsBtn) {
             settingsModal.style.display = 'none';
+        }
+        if (!infoModal.contains(e.target) && e.target !== infoBtn) {
+            infoModal.style.display = 'none';
         }
     });
 
