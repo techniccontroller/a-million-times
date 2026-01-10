@@ -44,6 +44,7 @@
       background: #ffffff;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
       padding: 2vmin;
+      border-radius: 2vmin;
     }
     canvas {
       display: block;
@@ -871,8 +872,9 @@
     const gx = cx + r * 0.25;
     const gy = cy + r * 0.25;
     const grad = targetCtx.createRadialGradient(gx, gy, r * 0.6, cx, cy, r);
-    grad.addColorStop(0, rgba(backColor));
-    grad.addColorStop(0.7, rgba(backColor));
+    faceColor = { r: backColor.r - 10, g: backColor.g - 10, b: backColor.b - 10, a: 1.0 };
+    grad.addColorStop(0, rgba(faceColor));
+    grad.addColorStop(0.7, rgba(faceColor));
     grad.addColorStop(1, rgba(shadowColor));
 
     targetCtx.beginPath();
